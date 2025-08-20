@@ -196,6 +196,7 @@ impl CodegenBackend for GccCodegenBackend {
             if target_cpu != "generic" {
                 context.add_command_line_option(format!("-march={}", target_cpu));
             }
+            gcc_util::add_base_args(&context, _sess);
 
             **self.target_info.info.lock().expect("lock") = context.get_target_info();
         }
@@ -208,6 +209,7 @@ impl CodegenBackend for GccCodegenBackend {
             let temp_dir = TempDir::new().expect("cannot create temporary directory");
             let temp_file = temp_dir.keep().join("result.asm");
             let check_context = Context::default();
+            gcc_util::add_base_args(&check_context, _sess);
             check_context.set_print_errors_to_stderr(false);
             let _int128_ty = check_context.new_c_type(CType::UInt128t);
             // NOTE: we cannot just call compile() as this would require other files than libgccjit.so.
@@ -291,6 +293,7 @@ impl ExtraBackendMethods for GccCodegenBackend {
             should_combine_object_files: false,
             temp_dir: None,
         };
+        gcc_util::add_base_args(&mods.context, &tcx.sess);
 
         unsafe {
             allocator::codegen(tcx, &mut mods, module_name, kind, alloc_error_handler_kind);
